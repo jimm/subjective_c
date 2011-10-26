@@ -1,0 +1,12 @@
+* Subjective C
+
+Subjective C is an incomplete implementation of Objective C that I wrote
+many years ago --- some time around 1993. It uses a hand-written parser to
+find Objective C code and turn it into ANSII C. As part of the compliation
+process, a small Perl script munges the C compiler's assemply code output to
+turn a jsr into a jump into the code that implements method lookup.
+
+Included are a few basic library classes: List, Dictionary, String, Stream,
+and Zone.
+
+Jim Menard, jim@jimmenard.com

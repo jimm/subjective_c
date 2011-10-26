@@ -1,0 +1,25 @@
+include ../Makefile.pre
+
+NAME	= main
+OBJECT_H = Object.h Object_impl.h Class.h
+CLASS_H	= $(OBJECT_H)
+OBJS	= Object.o MessageSend.o
+
+
+all:		$(NAME)
+
+$(NAME):	main.o $(OBJS)
+	$(CC) $(CFLAGS) $(DEVELOP) -o $@ main.o $(OBJS)
+
+main.o:		main.m $(OBJECT_H)
+MessageSend.o:	MessageSend.m $(OBJECT_H)
+Object.o:	Object.m $(OBJECT_H)
+
+clean:
+	rm -f *.[oc] *.pre $(NAME) core.$(NAME)
+
+install:	all
+	cp $(OBJECT_H) $(INCDIR)/subjc
+	rm -f $(LIBDIR)/libsubjc.a
+	ar r $(LIBDIR)/libsubjc.a $(OBJS)
+	ranlib $(LIBDIR)/libsubjc.a

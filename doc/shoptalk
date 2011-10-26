@@ -1,0 +1,332 @@
+
+				Subjective-C
+			a preprocessor that translates from
+			a subset of Objective-C into ANSI C
+
+
+
+What is it?
+===========
+
+Objective-C subset to ANSI C preprocessor
+based upon Marty's talk, Pat's investigations, conversations
+	with Dean and others, and "Object-Oriented Programming,
+	an Evolutionary Approach," 2nd. Ed., Brad J. Cox and
+	Andrew J. Novobilski
+
+
+Features
+========
+
+Objective-C syntax and most of its OO features:
+	inheritance
+	polymorphism
+	message passing, @selector, respondsTo:, etc.
+	class/instance methods
+	run time binding
+	self/super
+	etc.
+Object class
+List class
+I'm working on Stream and String classes
+
+
+Implementation and Usage Details
+================================
+
+Compiling
+
+C preprocessor --> m2c --> .c file
+
+m2c: text munging of brackets and -/+ stmts
+runtime: _msgSend() and _msgSuper()
+
+Running
+
+_lookupFunc() finds func pointer or returns NULL
+
+Types
+
+id type is void * (under non-ANSI MWC, it's char *)
+typedef char *SEL
+static class and metaclass structures created at "compile" time
+
+@interface and @implementation
+	@interface
+		(a) prepend superclass var declarations
+		(b) collect method names for class/metaclass
+	@implementation
+		(a) turn func definitions into ANSI signatures
+		(b) turn bracket statements into _msgSend() calls
+
+Text Translation
+
+didn't use lex/yacc since I want it to run on my Atari ST
+method signatures
+	use of "#if __STDC__"
+	"Object0" ... "Object<n>" 'cause of func name length
+bracket statements
+[obj foo: 3 bar: [[ClassName alloc] init]]	-->
+	_msgSend(obj, ((SEL)"foo:bar:"), 3,
+		 _msgSend(_msgSend(ClassNameClass, ((SEL)"alloc")),
+			  ((SEL)"init")))
+_msgSend() and _msgSuper() cast to proper return type
+    ((id(*)())_msgSend)(receiver, selector, args...);
+    ((id(*)())_msgSend)((_gSuperContext.receiver=self,
+			 _gSuperContext.class=ObjectClass, &_gSuperContext),
+			selector, args...);
+handle super
+	struct super_context
+	{
+		id receiver;
+		Class class;
+	}
+	_msgSuper((_gSuperContext.receiver=self,
+		   _gSuperContext.class=<impl_class>,&_gSuperContext),
+		  ((SEL)"method:name:", args);
+	where to start the search for a method
+
+Passing arguments via "jmp"
+
+handle class names
+[ClassName alloc] preprocessed into _msgSend(ClassNameClass, ((SEL)"alloc"))
+	relies on first char being upper case and in
+	receiver (1st) position
+
+Classes/metaclasses
+
+	typedef struct _Class {
+	    struct _Class *isa;		/* <-- Object ivar */
+	    struct _Class *superclass;
+	    size_t objectSize;		/* Size of instance */
+	    char *name;
+	    MethodList methods;
+	} Class;
+
+	Class ListClassRep =
+	        {&ListClassRep, &ObjectClassRep, sizeof(List), "List"};
+	Class *ListClass = &ListClassRep;
+
+
+Class knows size of instances, so alloc can do the right thing
+
+Portability of Subjective-C
+I use #ifdef's to allow Subjective-C to compile under ANSI and K&R,
+and special #ifdef's for differences with my home system
+
+
+Limitations
+===========
+
+must specifically write "self->ivar"
+	otherwise, I would have to check all alphanum words and
+	compare w/list of ivars for self and all superclasses
+	(I *do* have that information on hand)
+
+does not support "#import" (unless your preprocessor does)
+
+no catagories
+
+bracket translation isn't perfect, since I'm not using lex/yacc
+
+broken by NeXT cc preprocessor - I've kluged back together
+
+
+The Future
+==========
+
+self->ivar not necessary
+cacheing
+
+Examples
+========
+
+Here are some .m files with the corresponding .c output:
+
+====
+point.h
+====
+
+#ifndef _point_h_
+#define _point_h_
+
+#include <objc/object.h>
+
+@interface Point : Object
+{
+    int x;
+    int y;
+}
+
+- init;
+- setX: (int)newX y: (int)newY;
+
+@end
+
+#endif /* _point_h_ */
+
+====
+point.m
+====
+
+#include "point.h"
+
+@implementation Point
+
+- init
+{
+    [super init];
+    self->x = self->y = 0;
+    return self;
+}
+
+- setX: (int)newX y: (int)newY
+{
+    self->x = newX;
+    self->y = newY;
+    return self;
+}
+
+@end
+
+====
+becomes....
+====
+
+typedef struct _Point {
+    struct _Class *isa;
+    int x;
+    int y;
+} Point;
+extern struct _Class *PointClass, *_Point;
+extern struct _Class PointClassRep, *_PointRep;
+
+#if __STDC__
+id Point_init(Point *self, SEL selector)
+#else
+id Point_init(self, selector)
+    Point *self;
+    SEL selector;
+#endif
+{
+    ((id(*)())_msgSend)((_gSuperContext.receiver=self,
+			 _gSuperContext.class=ObjectClass, &_gSuperContext),
+			((SEL)"init");
+  self->x = self->y = 0;
+  return self;
+}
+
+#if __STDC__
+id Point_setX_y_(Point *self, SEL selector, int newX, int newY)
+#else
+id Point_setX_y_(self, selector, newX, newY)
+    Point *self;
+    SEL selector;
+    int newX;
+    int newY;
+#endif
+{
+    self->x = newX;
+    self->y = newY;
+    return self;
+}
+
+static Method metaclass_list[] =
+{
+};
+Class _PointRep =
+{
+    (Class)0,
+    &_ObjectRep,
+    "_Point",
+    {0, metaclass_list}
+};
+static Method class_list[] =
+{
+    {"init", Point_init},
+    {"setX:y:", Point_setX_y_}
+};
+Class _PointRep =
+{
+    &_PointRep,
+    &ObjectClassRep,
+    "Point",
+    {2, class_list}
+};
+
+
+====
+main.m
+====
+
+#include <stdio.h>
+#include "point.h"
+
+main()
+{
+  Point *p = [[Point alloc] init];
+
+  printf("Point p = ");
+  [p onFile: stdout];	/* Not shown above */
+  putchar('\n');
+
+  printf("Point p = ");
+  [p setX: 3 y: 5];
+  [p onFile: stdout];
+  putchar('\n');
+
+  printf("Does p respond to @selector(setX:y:)? %s\n",
+	 [p respondsTo: @selector(setX:y:)] ? "YES" : "NO");
+  printf("Does class Point respond to @selector(setX:y:)? %s\n",
+	 [Point instancesRespondTo: @selector(setX:y:)] ?
+	 "YES" : "NO");
+
+  putchar('\n');
+
+  printf("Does p respond to @selector(dummy)? %s\n",
+	 [p respondsTo: @selector(dummy)] ? "YES" : "NO");
+  printf("Does class Point respond to @selector(dummy)? %s\n",
+	 [Point instancesRespondTo: @selector(dummy)] ? "YES" : "NO");
+
+  [p free];
+
+  exit(0);
+}
+
+====
+becomes....
+====
+
+main()
+{
+    Point *p = _msgSend(_msgSend(PointClass, ((SEL)"alloc")), ((SEL)"init"));
+
+    printf("Point p = ");
+    ((id(*)())_msgSend)(p, ((SEL)"onFile:"), (&__sF[1]));
+    /* macro expansion of putchar() */
+
+    printf("Point p = ");
+    ((id(*)())_msgSend)(p, ((SEL)"setX:y:"), 3, 5);
+    ((id(*)())_msgSend)(p, ((SEL)"onFile:"), (&__sF[1]));
+    /* macro expansion of putchar() here */
+
+    printf("Does p respond to @selector(setX:y:)? %s\n",
+	   ((int(*)())_msgSend)(p, ((SEL)"respondsTo:"), ((SEL)"setX:y:")) ? "YES" : "NO");
+    printf("Does class Point respond to @selector(setX:y:)? %s\n",
+	   ((int(*)())_msgSend)(PointClass, ((SEL)"instancesRespondTo:"),
+		    ((SEL)"setX:y:"))
+	   ? "YES" : "NO");
+
+    /* macro expansion of putchar() deleted */
+
+    printf("Does p respond to @selector(dummy)? %s\n",
+	   ((int(*)())_msgSend)(p, ((SEL)"respondsTo:"), ((SEL)"dummy")) ?
+	   "YES" : "NO");
+    printf("Does class Point respond to @selector(dummy)? %s\n",
+	   ((int(*)())_msgSend)(PointClass, ((SEL)"instancesRespondTo:"),
+				((SEL)"dummy")) ? "YES" : "NO");
+
+    ((id(*)())_msgSend)(p, ((SEL)"free"));
+
+    exit(0);
+}

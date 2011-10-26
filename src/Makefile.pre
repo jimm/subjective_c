@@ -1,0 +1,27 @@
+# -*- makefile -*-
+#
+# This file is included in many Makefiles in the directory below this one.
+#
+CC	= gcc
+CPP	= gcc -E
+# Can't use -Wall because -Wunused complains about unused _cmd and self args
+CFLAGS	= -O -W -Wimplicit -Wreturn-type -Wswitch -Wcomment -Wtrigraphs -I$(INCDIR)
+# -g
+CPPFLAGS = -I$(INCDIR)
+LDFLAGS	= -L$(LIBDIR)
+HOME	= ../..
+
+BINDIR	= $(HOME)/bin
+INCDIR	= $(HOME)/include
+LIBDIR	= $(HOME)/lib
+ETCDIR	= $(HOME)/etc
+SUBJC	= $(HOME)/bin/subjc
+
+.SUFFIXES:	.m
+
+.m.o:
+	$(BINDIR)/subjc_preproc.pl $*.m >$*.c
+	$(CPP) $(CPPFLAGS) $*.c >$*.pre
+	$(SUBJC) $*.pre >$*.c
+	$(CC) $(CFLAGS) $(DEVELOP) -c $*.c
+	rm $*.c $*.pre

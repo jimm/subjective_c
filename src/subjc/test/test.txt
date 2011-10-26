@@ -1,0 +1,67 @@
+@interface Bletch
+{
+    int x;
+    void (*funcPtr)(int, char *), (*another)(int x, char *p);
+}
+- init;
+- free;
+@end
+
+@interface Bar : Bletch
+{
+    int y;
+    int j;		// comment
+    int k;		/* another comment */
+    char *p;	/* a run-on
+    				comment */
+    float boat;
+    void ** data;
+}
+- foo: (int)x;
+- foo: (int)x : (int)y;
+- foo: (int)x bar: (int)y;
+- run:together;
+- bletch;
+@end
+
+@implementation Bar
+
+[[Foo alloc] init];
+[self foo];
+[self foo: 3];
+[self foo: x];
+[self foo: another];
+[self foo: p];
+[self foo: x : y];
+[self foo: boat];
+[self foo: boat : boat];
+[self foo: x : self->y];
+[self foo: data];
+[self run: together];
+[self run:together];
+[data[2] foo: 42];
+[self foo: 'c'];
+[self foo: 'c' bar: 'b'];
+[self foo: "string"];
+[self foo: "string1" bar: "string with char 'c'"];
+[self foo: [self bletch]];
+[self foo: c = [self bletch]];
+[self foo: (c = [self bletch])];
+@selector(bletch:hack:);
+[self foo: @selector(bletch:hack:)];
+[self foo: (aSelector = @selector(bletch:hack:))];
+
+[self foo: i = 3];
+[self foo: 3 / 2];
+[self foo: 3 / / 2];
+[self foo: 3/2];	// comment
+[self foo];
+[self foo: i = [self bar]];
+
+[ self foo : 3] ;
+[ self foo : x] ;
+[ self foo : x : y] ;
+[ self foo : ( aSelector = @selector( bletch : hack : ) ) ] ;
+iob [ 2 ] ;
+
+@end
