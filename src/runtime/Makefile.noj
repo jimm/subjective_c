@@ -1,3 +1,5 @@
+# -*- makefile -*-
+
 include ../Makefile.pre
 
 NAME	= main

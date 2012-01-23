@@ -2,9 +2,12 @@
 
 Subjective C is an incomplete implementation of Objective C that I wrote
 many years ago --- some time around 1993. It uses a hand-written parser to
-find Objective C code and turn it into ANSII C. As part of the compliation
-process, a small Perl script munges the C compiler's assemply code output to
-turn a jsr into a jump into the code that implements method lookup.
+find Objective C code and turn it into ANSII C.
+
+As part of the compliation process, the Perl script src/runtime/makejump.pl
+munges the C compiler's assemply code output to turn a jsr into a jump into
+the code that implements method lookup. The script only works for Motorola
+68k and Intel i86 processors.
 
 Included are a few basic library classes: List, Dictionary, String, Stream,
 and Zone.
