@@ -34,3 +34,6 @@ install:	all
 	rm -f $(LIBDIR)/libsubjc.a
 	ar r $(LIBDIR)/libsubjc.a $(OBJS)
 	ranlib $(LIBDIR)/libsubjc.a
+
+uninstall:
+	rm -rf $(INCDIR)/subjc

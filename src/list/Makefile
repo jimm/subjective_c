@@ -21,3 +21,7 @@ install:	$(NAME)
 	cp List.h Dictionary.h String.h Stream.h $(INCDIR)/subjc
 	ar r $(LIBDIR)/libsubjc.a List.o Dictionary.o String.o Stream.o
 	ranlib $(LIBDIR)/libsubjc.a
+
+uninstall:
+	cd $(INCDIR) && rm -f List.h Dictionary.h String.h Stream.h
+	rm -f $(LIBDIR)/libsubjc.a

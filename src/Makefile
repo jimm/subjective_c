@@ -20,3 +20,9 @@ install:
 	cd $(HERE)/subjc; make -k install
 	cd $(HERE)/runtime; make -k install
 #	cd $(HERE)/mcurses; make -k install
+
+uninstall:
+	cd $(HERE)/list; make -k uninstall
+	cd $(HERE)/subjc; make -k uninstall
+	cd $(HERE)/runtime; make -k uninstall
+#	cd $(HERE)/mcurses; make -k uninstall

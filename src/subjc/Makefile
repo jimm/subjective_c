@@ -27,3 +27,6 @@ clean:
 install:	all
 	cp $(NAME) $(BINDIR)/$(NAME)
 	strip $(BINDIR)/$(NAME)
+
+uninstall:
+	rm -f $(BINDIR)/$(NAME)
