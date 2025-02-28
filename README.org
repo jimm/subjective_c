@@ -5,7 +5,7 @@ Subjective C is an implementation of Objective C that I wrote many years ago
 code and turn it into ANSII C.
 
 As part of the compliation process, the Perl script src/runtime/makejump.pl
-munges the C compiler's assemply code output to turn a jsr into a jump into
+munges the C compiler's assembly code output to turn a ~jsr~ into a jump into
 the code that implements method lookup. The script only works for Motorola
 68k and Intel i86 processors.
 
